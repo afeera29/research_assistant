@@ -63,25 +63,15 @@ def search_papers(query: str = Query(...)):
         )
 
         results = []
-        for r in response.results:
+        for r in getattr(response, "results", []):
             results.append({
-                "title": r.title or "N/A",
-                "author": r.author or "N/A",
+                "title": getattr(r, "title", "N/A"),
+                "author": getattr(r, "author", "N/A"),
                 "date": getattr(r, "published_date", "N/A"),
-                "url": r.url or "N/A"
+                "url": getattr(r, "url", "N/A")
             })
         return {"results": results}
 
     except Exception as e:
         print("Exa API error:", e)
         return {"results": [], "error": str(e)}
-#  frontend
-# npm install
-# npm run build
-# Run FastAPI backend:
-
-# bash
-# Copy code
-# cd ../backend
-# uvicorn app:app --host 0.0.0.0 --port 8000 --reload
-# Open http://127.0.0.1:8000 — React app loads, search works.

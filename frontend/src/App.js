@@ -11,7 +11,7 @@ function App() {
     setLoading(true);
     try {
       const res = await axios.get(`/search`, { params: { query } });
-      setResults(res.data.results);
+      setResults(Array.isArray(res.data.results) ? res.data.results : []);
     } catch (err) {
       console.error(err);
       setResults([]);
@@ -43,7 +43,7 @@ function App() {
       {loading && <p className="text-gray-500 mb-4">Searching papers...</p>}
 
       <div className="w-full max-w-2xl space-y-4">
-        {results.map((paper, idx) => (
+        {Array.isArray(results) && results.map((paper, idx) => (
           <div key={idx} className="p-4 bg-white rounded-xl shadow hover:shadow-lg transition">
             <h2 className="text-lg font-semibold text-gray-800">{paper.title}</h2>
             <p className="text-sm text-gray-500"> Author: {paper.author}</p>
