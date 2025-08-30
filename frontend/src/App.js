@@ -10,7 +10,12 @@ function App() {
     if (!query) return;
     setLoading(true);
     try {
-      const res = await axios.get(`/search`, { params: { query } });
+      const BACKEND_URL =process.env.NODE_ENV === "production"
+      ? "https://research-assistant-0flj.onrender.com"
+      : "http://127.0.0.1:8000";
+  const res = await axios.get(`${BACKEND_URL}/search`, { params: { query } });
+
+
       setResults(Array.isArray(res.data.results) ? res.data.results : []);
     } catch (err) {
       console.error(err);
