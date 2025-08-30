@@ -9,7 +9,7 @@ from exa_py import Exa
 # Load environment variables
 load_dotenv()
 EXA_API_KEY = os.getenv("EXA_API_KEY")
-exa = Exa(EXA_API_KEY) 
+exa = Exa(EXA_API_KEY)
 
 app = FastAPI()
 
@@ -33,11 +33,17 @@ def serve_react():
 # Serve favicon and manifest
 @app.get("/favicon.ico")
 def favicon():
-    return FileResponse(os.path.join(frontend_path, "favicon.ico"))
+    path = os.path.join(frontend_path, "favicon.ico")
+    if os.path.exists(path):
+        return FileResponse(path)
+    return FileResponse(os.path.join(frontend_path, "public/favicon.ico"))
 
 @app.get("/manifest.json")
 def manifest():
-    return FileResponse(os.path.join(frontend_path, "manifest.json"))
+    path = os.path.join(frontend_path, "manifest.json")
+    if os.path.exists(path):
+        return FileResponse(path)
+    return FileResponse(os.path.join(frontend_path, "public/manifest.json"))
 
 # Catch-all route for React Router
 @app.get("/{full_path:path}")
@@ -75,6 +81,8 @@ def search_papers(query: str = Query(...)):
     except Exception as e:
         print("Exa API error:", e)
         return {"results": [], "error": str(e)}
+
+# Debug route
 @app.get("/debug")
 def debug():
     return {"EXA_API_KEY": EXA_API_KEY, "frontend_exists": os.path.exists(frontend_path)}
