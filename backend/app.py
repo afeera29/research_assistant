@@ -4,14 +4,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import os
 from dotenv import load_dotenv
-import requests
 from exa_py import Exa
-load_dotenv()
 
+# Load environment variables
+load_dotenv()
 EXA_API_KEY = os.getenv("EXA_API_KEY")
 exa = Exa(EXA_API_KEY) 
+
 app = FastAPI()
 
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -19,13 +21,30 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# React frontend build path
 frontend_path = os.path.join(os.path.dirname(__file__), "../frontend/build")
 app.mount("/static", StaticFiles(directory=os.path.join(frontend_path, "static")), name="static")
 
+# Serve main React page
 @app.get("/")
 def serve_react():
     return FileResponse(os.path.join(frontend_path, "index.html"))
 
+# Serve favicon and manifest
+@app.get("/favicon.ico")
+def favicon():
+    return FileResponse(os.path.join(frontend_path, "favicon.ico"))
+
+@app.get("/manifest.json")
+def manifest():
+    return FileResponse(os.path.join(frontend_path, "manifest.json"))
+
+# Catch-all route for React Router
+@app.get("/{full_path:path}")
+def serve_react_catchall(full_path: str):
+    return FileResponse(os.path.join(frontend_path, "index.html"))
+
+# Search API
 @app.get("/search")
 def search_papers(query: str = Query(...)):
     try:
@@ -56,3 +75,13 @@ def search_papers(query: str = Query(...)):
     except Exception as e:
         print("Exa API error:", e)
         return {"results": [], "error": str(e)}
+#  frontend
+# npm install
+# npm run build
+# Run FastAPI backend:
+
+# bash
+# Copy code
+# cd ../backend
+# uvicorn app:app --host 0.0.0.0 --port 8000 --reload
+# Open http://127.0.0.1:8000 — React app loads, search works.
