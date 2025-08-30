@@ -75,3 +75,6 @@ def search_papers(query: str = Query(...)):
     except Exception as e:
         print("Exa API error:", e)
         return {"results": [], "error": str(e)}
+@app.get("/debug")
+def debug():
+    return {"EXA_API_KEY": EXA_API_KEY, "frontend_exists": os.path.exists(frontend_path)}

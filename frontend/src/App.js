@@ -10,7 +10,7 @@ function App() {
     if (!query) return;
     setLoading(true);
     try {
-      const res = await axios.get(`/search`, { params: { query } });
+      const res = await axios.get(`/search`, { params: { query } });s
       setResults(Array.isArray(res.data.results) ? res.data.results : []);
     } catch (err) {
       console.error(err);
