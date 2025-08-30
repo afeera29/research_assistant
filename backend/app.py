@@ -1,46 +1,58 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Query
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
-from pathlib import Path
-from dotenv import load_dotenv
 import os
-
-# Load environment variables
+from dotenv import load_dotenv
+import requests
+from exa_py import Exa
 load_dotenv()
-EXA_API_KEY = os.getenv("EXA_API_KEY")
 
-# Initialize FastAPI
+EXA_API_KEY = os.getenv("EXA_API_KEY")
+exa = Exa(EXA_API_KEY) 
 app = FastAPI()
 
-# Path to frontend build
-frontend_build_dir = Path(__file__).parent.parent / "frontend" / "build"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Serve static files
-app.mount("/static", StaticFiles(directory=frontend_build_dir / "static"), name="static")
+frontend_path = os.path.join(os.path.dirname(__file__), "../frontend/build")
+app.mount("/static", StaticFiles(directory=os.path.join(frontend_path, "static")), name="static")
 
-# API endpoint example
-from exa_py import Exa
-exa = Exa(EXA_API_KEY)
+@app.get("/")
+def serve_react():
+    return FileResponse(os.path.join(frontend_path, "index.html"))
 
 @app.get("/search")
-async def search(query: str):
-    response = exa.search(
-        query,
-        num_results=5,
-        type='keyword'
-    )
-    results = []
-    for result in response.results:
-        results.append({
-            "title": result.title,
-            "author": getattr(result, "author", "N/A"),
-            "date": getattr(result, "published_date", "N/A"),
-            "url": result.url
-        })
-    return {"results": results}
+def search_papers(query: str = Query(...)):
+    try:
+        response = exa.search(
+            query,
+            num_results=10,
+            category="papers",
+            start_published_date="2020-01-01",
+            include_domains=[
+                "arxiv.org",
+                "researchgate.net",
+                "springer.com",
+                "ieee.org",
+                "acm.org"
+            ]
+        )
 
-# Serve React app
-@app.get("/{full_path:path}")
-async def serve_react(full_path: str):
-    index_file = frontend_build_dir / "index.html"
-    return FileResponse(index_file)
+        results = []
+        for r in response.results:
+            results.append({
+                "title": r.title or "N/A",
+                "author": r.author or "N/A",
+                "date": getattr(r, "published_date", "N/A"),
+                "url": r.url or "N/A"
+            })
+        return {"results": results}
+
+    except Exception as e:
+        print("Exa API error:", e)
+        return {"results": [], "error": str(e)}
