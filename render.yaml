@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: research-assistant
+    env: python
+    buildCommand: |
+      cd frontend && npm install && npm run build
+      cd ../backend && pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: EXA_API_KEY
+        sync: false
